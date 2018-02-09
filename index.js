@@ -19,6 +19,7 @@ class Watchpuppy extends EventEmitter {
     this.minPing = options.minPing || 1;
     this.checkInterval = options.checkInterval || 10000;
     this.stopOnError = options.stopOnError || true;
+    this.expiration = options.expiration || -1;
 
     //internal properties
     this.counter = 0;
@@ -47,6 +48,9 @@ class Watchpuppy extends EventEmitter {
 
   //it is possible to give more weight to a ping or disable it by passing in a negative number
   ping(num) {
+    if (this.hasExpired()) {
+       return this.emit('error', new Error(`Watchpuppy expired`));
+    }
     num = 1 * num || 1;
     for (let i = 0; i < num; i++) {
       this.emit('ping');
@@ -55,6 +59,13 @@ class Watchpuppy extends EventEmitter {
 
   stop() {
     clearInterval(this.interval);
+  }
+
+  hasExpired(){
+    if (this.expiration === -1) {
+      return false;
+    }
+    return this.expiration < Date.now();
   }
 }
 
